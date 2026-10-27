@@ -1,0 +1,20 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: transaction-ledger-mongodb
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    command: ['mongod', '--replSet', 'rs0', '--bind_ip_all']
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'mongosh --quiet --eval "try { rs.status().ok } catch (error) { quit(1) }"']
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+volumes:
+  mongodb_data:
