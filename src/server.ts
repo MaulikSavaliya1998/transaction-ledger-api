@@ -10,7 +10,7 @@ async function bootstrap(): Promise<void> {
 
   const server: Server = app.listen(env.port, () => {
     console.log(`API running at http://localhost:${env.port}`);
-    console.log(`Health check: http://localhost:${env.port}/health`);
+    console.log(`Health check: http://localhost:${env.port}/api/v1/health`);
   });
 
   let isShuttingDown = false;
