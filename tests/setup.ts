@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import mongoose from 'mongoose';
-import { afterAll, beforeAll, beforeEach } from 'vitest';
+import { afterAll, afterEach, beforeAll } from 'vitest';
 
 config();
 
@@ -16,7 +16,7 @@ beforeAll(async () => {
   });
 });
 
-beforeEach(async () => {
+afterEach(async () => {
   const collections = await mongoose.connection.db?.collections();
 
   if (!collections) {

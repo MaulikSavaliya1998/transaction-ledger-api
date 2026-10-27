@@ -28,5 +28,49 @@ export const transactionRepository = {
     });
 
     return transaction;
+  },
+
+  async findPaginatedByAccount(
+    accountId: mongoose.Types.ObjectId,
+    options: {
+      type?: TransactionType;
+      page: number;
+      limit: number;
+    },
+    session?: mongoose.ClientSession
+  ): Promise<TransactionDocument[]> {
+    const filter: Record<string, unknown> = {
+      accountId
+    };
+
+    if (options.type) {
+      filter.type = options.type;
+    }
+
+    const skip = (options.page - 1) * options.limit;
+
+    return Transaction.find(filter)
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(options.limit)
+      .session(session ?? null);
+  },
+
+  async countByAccount(
+    accountId: mongoose.Types.ObjectId,
+    options: {
+      type?: TransactionType;
+    },
+    session?: mongoose.ClientSession
+  ): Promise<number> {
+    const filter: Record<string, unknown> = {
+      accountId
+    };
+
+    if (options.type) {
+      filter.type = options.type;
+    }
+
+    return Transaction.countDocuments(filter).session(session ?? null);
   }
 };

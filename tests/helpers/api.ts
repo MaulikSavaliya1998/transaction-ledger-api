@@ -1,10 +1,12 @@
 import request from 'supertest';
 import { createApp } from '../../src/app.js';
 
-export const app = createApp();
+const app = createApp();
+
+export const api = request(app);
 
 export async function createAccount(name: string): Promise<string> {
-  const response = await request(app).post('/api/v1/accounts').send({ name });
+  const response = await api.post('/api/v1/accounts').send({ name });
 
   if (response.status !== 201) {
     throw new Error(`Account creation failed: ${JSON.stringify(response.body)}`);
@@ -14,7 +16,7 @@ export async function createAccount(name: string): Promise<string> {
 }
 
 export async function createTransaction(accountId: string, body: Record<string, unknown>) {
-  return request(app).post(`/api/v1/accounts/${accountId}/transactions`).send(body);
+  return api.post(`/api/v1/accounts/${accountId}/transactions`).send(body);
 }
 
 export async function getBalanceFromDatabase(accountId: string): Promise<number> {

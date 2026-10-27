@@ -2,6 +2,12 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { ZodError, type ZodTypeAny } from 'zod';
 import { ApiError } from '../utils/api-error.js';
 
+declare module 'express-serve-static-core' {
+  interface Request {
+    validatedQuery?: unknown;
+  }
+}
+
 interface ValidationSchemas {
   body?: ZodTypeAny;
   query?: ZodTypeAny;
@@ -16,9 +22,7 @@ export function validate(schemas: ValidationSchemas): RequestHandler {
       }
 
       if (schemas.query) {
-        const parsedQuery = schemas.query.parse(req.query);
-
-        Object.assign(req.query, parsedQuery);
+        req.validatedQuery = schemas.query.parse(req.query);
       }
 
       if (schemas.params) {
