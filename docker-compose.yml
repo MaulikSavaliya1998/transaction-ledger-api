@@ -16,5 +16,23 @@ services:
       retries: 15
       start_period: 10s
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transaction-ledger-api
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGODB_URI: mongodb://mongodb:27017/transaction_ledger?replicaSet=rs0
+      LOG_LEVEL: info
+      CORS_ORIGIN: '*'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
 volumes:
   mongodb_data:
