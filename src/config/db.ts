@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import { env } from './env.js';
 
 export async function connectDatabase(): Promise<void> {
+  mongoose.set('autoIndex', env.nodeEnv !== 'production');
+
   await mongoose.connect(env.mongoUri, {
     serverSelectionTimeoutMS: 5000
   });
