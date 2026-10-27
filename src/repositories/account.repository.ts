@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Account, type AccountDocument } from '../models/account.model.js';
 
 export interface CreateAccountData {
@@ -12,7 +13,33 @@ export const accountRepository = {
     });
   },
 
-  async findById(accountId: string): Promise<AccountDocument | null> {
-    return Account.findById(accountId);
+  async findById(
+    accountId: string,
+    session?: mongoose.ClientSession
+  ): Promise<AccountDocument | null> {
+    return Account.findById(accountId).session(session ?? null);
+  },
+
+  async applyBalanceChange(
+    accountId: mongoose.Types.ObjectId,
+    changeMinorUnits: number,
+    session: mongoose.ClientSession
+  ): Promise<AccountDocument | null> {
+    const filter: Record<string, unknown> = {
+      _id: accountId
+    };
+
+    if (changeMinorUnits < 0) {
+      filter.balanceMinorUnits = { $gte: Math.abs(changeMinorUnits) };
+    }
+
+    return Account.findOneAndUpdate(
+      filter,
+      { $inc: { balanceMinorUnits: changeMinorUnits } },
+      {
+        new: true,
+        session
+      }
+    );
   }
 };
