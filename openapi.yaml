@@ -1,0 +1,503 @@
+openapi: 3.0.3
+info:
+  title: Transaction Ledger API
+  description: |
+    A transaction ledger API for creating accounts, recording immutable
+    credit/debit transactions, retrieving balances, and transferring money
+    atomically between accounts.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+tags:
+  - name: Accounts
+    description: Account creation and balance operations
+  - name: Transactions
+    description: Immutable ledger transactions
+  - name: Transfers
+    description: Atomic money transfers
+
+paths:
+  /accounts:
+    post:
+      tags:
+        - Accounts
+      summary: Create a new account
+      description: Creates an account with a system-generated ID, zero initial balance, and creation timestamp.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+            examples:
+              valid:
+                value:
+                  name: Maulik Savaliya
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /accounts/{accountId}/balance:
+    get:
+      tags:
+        - Accounts
+      summary: Get account balance
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Account balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /accounts/{accountId}/transactions:
+    post:
+      tags:
+        - Transactions
+      summary: Create a credit or debit transaction
+      description: |
+        Creates an immutable ledger transaction and updates the account balance
+        atomically. Duplicate reference IDs are rejected for the same account.
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+            examples:
+              credit:
+                value:
+                  type: credit
+                  amount: 100.50
+                  description: Initial deposit
+                  referenceId: CREDIT-001
+              debit:
+                value:
+                  type: debit
+                  amount: 30
+                  description: Withdrawal
+                  referenceId: DEBIT-001
+      responses:
+        '201':
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags:
+        - Transactions
+      summary: Get transaction history
+      description: Returns paginated transaction history in latest-first order.
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Current page number
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of transactions per page
+        - name: type
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+          description: Filter transactions by type
+      responses:
+        '200':
+          description: Transaction history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionHistoryResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /transfers:
+    post:
+      tags:
+        - Transfers
+      summary: Transfer money between accounts
+      description: |
+        Debits the source account, credits the destination account, and creates
+        two immutable ledger entries in one atomic database transaction.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransferRequest'
+            examples:
+              valid:
+                value:
+                  sourceAccountId: 64b64b64b64b64b64b64b64b
+                  destinationAccountId: 64b64b64b64b64b64b64b64c
+                  amount: 30
+                  description: Transfer to friend
+                  referenceId: TRANSFER-001
+      responses:
+        '201':
+          description: Transfer completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  parameters:
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      description: MongoDB account identifier
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+
+  schemas:
+    TransactionType:
+      type: string
+      enum:
+        - credit
+        - debit
+
+    CreateAccountRequest:
+      type: object
+      required:
+        - name
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+          example: Maulik Savaliya
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 64b64b64b64b64b64b64b64b
+        name:
+          type: string
+          example: Maulik Savaliya
+        balance:
+          type: number
+          format: double
+          example: 0
+        createdAt:
+          type: string
+          format: date-time
+
+    AccountResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Account'
+
+    BalanceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            accountId:
+              type: string
+            balance:
+              type: number
+              format: double
+              example: 70
+
+    CreateTransactionRequest:
+      type: object
+      required:
+        - type
+        - amount
+        - description
+        - referenceId
+      additionalProperties: false
+      properties:
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+          example: 100.5
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Initial deposit
+        referenceId:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: CREDIT-001
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        accountId:
+          type: string
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        amount:
+          type: number
+          format: double
+        description:
+          type: string
+        referenceId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    TransactionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Transaction'
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        totalRecords:
+          type: integer
+          example: 25
+        totalPages:
+          type: integer
+          example: 3
+        hasNextPage:
+          type: boolean
+        hasPreviousPage:
+          type: boolean
+
+    TransactionHistoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    CreateTransferRequest:
+      type: object
+      required:
+        - sourceAccountId
+        - destinationAccountId
+        - amount
+        - description
+        - referenceId
+      additionalProperties: false
+      properties:
+        sourceAccountId:
+          type: string
+        destinationAccountId:
+          type: string
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+        referenceId:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+    TransferResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            transferId:
+              type: string
+            amount:
+              type: number
+            sourceAccountId:
+              type: string
+            destinationAccountId:
+              type: string
+            debit:
+              $ref: '#/components/schemas/Transaction'
+            credit:
+              $ref: '#/components/schemas/Transaction'
+
+    ErrorDetail:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Request validation failed
+            details:
+              type: array
+              items:
+                $ref: '#/components/schemas/ErrorDetail'
+
+  responses:
+    ValidationError:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: VALIDATION_ERROR
+              message: Request validation failed
+              details:
+                - field: amount
+                  message: Transaction amount must be greater than 0
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: NOT_FOUND
+              message: Account not found
+
+    Conflict:
+      description: Duplicate resource or reference
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: CONFLICT
+              message: A transaction with this reference ID already exists for this account
+
+    UnprocessableEntity:
+      description: Business rule validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: UNPROCESSABLE_ENTITY
+              message: Insufficient account balance for this debit transaction
+
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              code: INTERNAL_SERVER_ERROR
+              message: Internal server error

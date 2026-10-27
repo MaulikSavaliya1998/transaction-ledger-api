@@ -1,8 +1,10 @@
 import cors from 'cors';
-import express, { type Request, type Response } from 'express';
+import express from 'express';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
+import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env.js';
+import { loadOpenApiDocument } from './config/openapi.js';
 import { errorHandler, notFoundMiddleware } from './middlewares/error.middleware.js';
 import { apiRateLimiter } from './middlewares/rate-limit.middleware.js';
 import { requestIdMiddleware } from './middlewares/request-id.middleware.js';
@@ -10,6 +12,7 @@ import { apiRouter } from './routes/index.js';
 
 export function createApp() {
   const app = express();
+  const openApiDocument = loadOpenApiDocument();
 
   app.disable('x-powered-by');
 
@@ -33,6 +36,12 @@ export function createApp() {
 
   app.use(express.json({ limit: '100kb' }));
 
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
+
+  app.get('/openapi.json', (_req, res) => {
+    res.json(openApiDocument);
+  });
+
   app.use('/api/v1', apiRateLimiter, apiRouter);
 
   app.get('/', (_req, res) => {
@@ -40,7 +49,8 @@ export function createApp() {
       success: true,
       data: {
         message: 'Transaction Ledger API is running',
-        documentation: '/api/v1/health'
+        documentation: '/api-docs',
+        openapi: '/openapi.json'
       }
     });
   });
@@ -48,16 +58,6 @@ export function createApp() {
   app.use(notFoundMiddleware);
 
   app.use(errorHandler);
-
-  app.get('/', (_req: Request, res: Response) => {
-    res.status(200).json({
-      success: true,
-      data: {
-        message: 'Transaction Ledger API is running',
-        documentation: '/api/v1/health'
-      }
-    });
-  });
 
   return app;
 }
