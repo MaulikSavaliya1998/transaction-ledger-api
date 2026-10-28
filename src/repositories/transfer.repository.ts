@@ -12,6 +12,7 @@ export interface TransferData {
   referenceId: string;
 }
 
+// Transfer repository handles the ledger rules for moving money between two accounts.
 export const transferRepository = {
   async executeTransfer(
     data: TransferData,
@@ -38,6 +39,9 @@ export const transferRepository = {
       throw new Error('DESTINATION_ACCOUNT_NOT_FOUND');
     }
 
+    // Transfer IDs are intentionally derived per side of the ledger so the same
+    // external reference can be reused across accounts while still keeping the
+    // internal uniqueness rule scoped to each account.
     const existingDebit = await transactionRepository.findByAccountAndReference(
       data.sourceAccountId,
       `${data.referenceId}:DEBIT`,

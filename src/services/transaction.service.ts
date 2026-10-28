@@ -5,6 +5,8 @@ import type { TransactionPublic } from '../types/transaction.js';
 import { ApiError } from '../utils/api-error.js';
 import type { CreateTransactionInput } from '../validators/transaction.validator.js';
 
+// Amount conversion keeps the domain model stable: financial values are stored as
+// integer minor units instead of floating point numbers to avoid rounding bugs.
 function toMinorUnits(amount: number): number {
   const minorUnits = Math.round(amount * 100);
 
@@ -33,6 +35,8 @@ export const transactionService = {
     const accountObjectId = new mongoose.Types.ObjectId(accountId);
     const changeMinorUnits = input.type === 'credit' ? amountMinorUnits : -amountMinorUnits;
 
+    // We keep the balance mutation and the ledger record inside the same MongoDB
+    // transaction so a failed insert cannot leave the account balance changed.
     const session = await mongoose.startSession();
 
     try {
@@ -43,6 +47,9 @@ export const transactionService = {
           throw ApiError.notFound('Account not found');
         }
 
+        // A per-account reference ID is intentionally unique. Checking it before the
+        // balance write prevents duplicate ledger entries from being created under the
+        // same account in concurrent requests.
         const existingTransaction = await transactionRepository.findByAccountAndReference(
           accountObjectId,
           input.referenceId,

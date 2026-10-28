@@ -7,6 +7,8 @@ declare module 'express-serve-static-core' {
   }
 }
 
+// Request IDs are used to correlate logs, traces, and client errors, especially when
+// debugging failures across multiple async operations.
 export function requestIdMiddleware(req: Request, res: Response, next: NextFunction): void {
   const incomingId = req.headers['x-request-id'];
   const requestId =

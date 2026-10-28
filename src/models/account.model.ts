@@ -1,6 +1,8 @@
 import mongoose, { Schema, type Model } from 'mongoose';
 import type { AccountPublic } from '../types/transaction.js';
 
+// Account schema stores the current balance in minor units so the application can use
+// integer arithmetic safely and avoid floating-point precision drift.
 export interface AccountDocument extends mongoose.Document {
   name: string;
   balanceMinorUnits: number;

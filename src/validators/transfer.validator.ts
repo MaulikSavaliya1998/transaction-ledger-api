@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+// Transfer validation ensures the two account IDs are valid MongoDB ObjectIds and that
+// the source and destination are not the same account.
 const objectIdSchema = z
   .string({
     error: 'Account ID is required and must be a string'

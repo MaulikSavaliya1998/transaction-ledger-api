@@ -5,6 +5,7 @@ import type { TransactionPublic, TransactionType } from '../types/transaction.js
 import { ApiError } from '../utils/api-error.js';
 import type { TransactionQuery } from '../validators/transaction-query.validator.js';
 
+// Read-side query service that returns account history plus derived pagination state.
 export interface TransactionHistory {
   transactions: TransactionPublic[];
   pagination: {
@@ -31,6 +32,8 @@ export const transactionQueryService = {
     const accountObjectId = new mongoose.Types.ObjectId(accountId);
     const type = query.type as TransactionType | undefined;
 
+    // Count and fetch are executed in parallel because the API needs both the page slice
+    // and the aggregate total to build the pagination metadata.
     const [transactions, totalRecords] = await Promise.all([
       transactionRepository.findPaginatedByAccount(accountObjectId, {
         type,

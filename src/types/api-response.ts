@@ -1,3 +1,5 @@
+// Standard response envelopes are shared so every endpoint returns the same success and
+// failure structure for both client apps and tests.
 export interface ApiSuccess<T> {
   success: true;
   data: T;

@@ -4,10 +4,14 @@ import { ZodError } from 'zod';
 import { env } from '../config/env.js';
 import { ApiError } from '../utils/api-error.js';
 
+// Not found middleware ensures unknown routes return a structured API error instead of
+// a generic Express 404 HTML response.
 export function notFoundMiddleware(req: Request, res: Response, next: NextFunction): void {
   next(ApiError.notFound(`Route not found: ${req.method} ${req.originalUrl}`));
 }
 
+// Centralized error handling converts all thrown exceptions into the API's standard JSON
+// envelope, including validation and duplicate-key failures from MongoDB.
 export function errorHandler(
   error: unknown,
   req: Request,

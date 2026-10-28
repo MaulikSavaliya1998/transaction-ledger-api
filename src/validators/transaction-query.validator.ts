@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { TRANSACTION_TYPES } from '../types/transaction.js';
 
+// The history endpoint accepts both a path accountId and optional query filters, so it
+// uses a small reusable MongoDB ObjectId schema for safe parameter validation.
 const objectIdSchema = z
   .string({
     error: 'Account ID is required and must be a string'

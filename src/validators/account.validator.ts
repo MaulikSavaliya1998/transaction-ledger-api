@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+// Account input validation defines the contract for creating a new ledger account.
 export const createAccountSchema = z
   .object({
     name: z

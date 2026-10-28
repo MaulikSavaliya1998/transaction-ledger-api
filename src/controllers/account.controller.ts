@@ -4,6 +4,7 @@ import { asyncHandler } from '../utils/async-handler.js';
 import type { CreateAccountInput } from '../validators/account.validator.js';
 import type { AccountIdParams } from '../validators/transaction.validator.js';
 
+// Thin HTTP layer: parse the request, call the service, and shape the API response.
 export const createAccount = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { name } = req.body as CreateAccountInput;
 

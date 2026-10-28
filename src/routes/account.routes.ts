@@ -9,6 +9,8 @@ import {
 } from '../validators/transaction-query.validator.js';
 import { transactionRouter } from './transaction.routes.js';
 
+// Account-specific routes. The nested transaction router handles ledger operations for
+// an account after the accountId parameter is validated.
 export const accountRouter = Router();
 
 accountRouter.post('/', validate({ body: createAccountSchema }), createAccount);

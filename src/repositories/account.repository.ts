@@ -5,6 +5,8 @@ export interface CreateAccountData {
   name: string;
 }
 
+// Repository isolates the MongoDB operations for account records so the service layer
+// can stay focused on business rules.
 export const accountRepository = {
   async create(data: CreateAccountData): Promise<AccountDocument> {
     return Account.create({
@@ -29,6 +31,9 @@ export const accountRepository = {
       _id: accountId
     };
 
+    // The conditional balance check is crucial for debit operations: MongoDB applies
+    // the $inc only when the existing balance is large enough, which prevents
+    // overdrafts even when multiple debits arrive concurrently.
     if (changeMinorUnits < 0) {
       filter.balanceMinorUnits = { $gte: Math.abs(changeMinorUnits) };
     }

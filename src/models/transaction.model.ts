@@ -5,6 +5,8 @@ import {
   type TransactionType
 } from '../types/transaction.js';
 
+// Transaction records are the immutable ledger history for each account. Once created,
+// they cannot be edited or deleted, which preserves the audit trail of balances.
 export interface TransactionDocument extends mongoose.Document {
   accountId: mongoose.Types.ObjectId;
   type: TransactionType;
@@ -87,6 +89,9 @@ transactionSchema.methods.toPublic = function (): TransactionPublic {
   };
 };
 
+// This compound unique index ensures a transaction reference is only unique within
+// a given account. Different accounts may reuse the same reference value without
+// colliding, which matches the ledger domain requirements.
 transactionSchema.index(
   { accountId: 1, referenceId: 1 },
   {

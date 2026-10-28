@@ -10,6 +10,8 @@ export interface CreateTransactionData {
   referenceId: string;
 }
 
+// Transaction repository encapsulates the read/write logic for the immutable ledger
+// records and keeps the service code free of database-specific statements.
 export const transactionRepository = {
   async findByAccountAndReference(
     accountId: mongoose.Types.ObjectId,

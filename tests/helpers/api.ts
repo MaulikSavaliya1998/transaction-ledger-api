@@ -1,6 +1,8 @@
 import request from 'supertest';
 import { createApp } from '../../src/app.js';
 
+// Test helpers centralize the repeated API boilerplate so the spec files stay focused on
+// behavior instead of request setup.
 const app = createApp();
 
 export const api = request(app);

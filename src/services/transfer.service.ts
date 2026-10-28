@@ -4,6 +4,8 @@ import type { TransactionPublic } from '../types/transaction.js';
 import { ApiError } from '../utils/api-error.js';
 import type { CreateTransferInput } from '../validators/transfer.validator.js';
 
+// Transfer results contain both ledger entries because the API should return the exact
+// debit and credit effects that were recorded for the source and destination accounts.
 export interface TransferResult {
   transferId: string;
   amount: number;
@@ -56,6 +58,9 @@ export const transferService = {
     const sourceAccountId = new mongoose.Types.ObjectId(input.sourceAccountId);
     const destinationAccountId = new mongoose.Types.ObjectId(input.destinationAccountId);
 
+    // A transfer is treated as a double-entry ledger movement: one debit entry and
+    // one credit entry, both created in the same MongoDB transaction to guarantee
+    // atomicity and rollback on any failure.
     const session = await mongoose.startSession();
 
     try {

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { TRANSACTION_TYPES } from '../types/transaction.js';
 
+// MongoDB ObjectId validation is shared by every account-scoped endpoint to keep the
+// ID format consistent and reject malformed values before reaching the database.
 const objectIdSchema = z
   .string({
     error: 'Account ID is required and must be a string'

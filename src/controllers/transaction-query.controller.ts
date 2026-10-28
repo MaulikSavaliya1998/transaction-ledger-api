@@ -4,6 +4,8 @@ import { asyncHandler } from '../utils/async-handler.js';
 import type { TransactionQuery } from '../validators/transaction-query.validator.js';
 import type { AccountIdParams } from '../validators/transaction.validator.js';
 
+// Fetching account history is a read model concern, so the controller simply forwards
+// the validated query parameters to the service and returns the result payload.
 export const getTransactionHistory = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const { accountId } = req.params as unknown as AccountIdParams;

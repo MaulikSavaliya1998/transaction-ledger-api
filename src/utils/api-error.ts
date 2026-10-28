@@ -1,3 +1,5 @@
+// Custom app error type keeps HTTP status codes and business semantics together so the
+// global middleware can convert failures into consistent API responses.
 export type ErrorCode =
   | 'VALIDATION_ERROR'
   | 'NOT_FOUND'

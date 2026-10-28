@@ -6,6 +6,8 @@ import type {
   CreateTransactionInput
 } from '../validators/transaction.validator.js';
 
+// Controller is intentionally minimal: request parsing and response shaping are kept
+// separate from the ledger rules in the service layer.
 export const createTransaction = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const { accountId } = req.params as unknown as AccountIdParams;

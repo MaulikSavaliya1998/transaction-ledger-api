@@ -3,6 +3,8 @@ import { createApp } from './app.js';
 import { connectDatabase, disconnectDatabase } from './config/db.js';
 import { env } from './config/env.js';
 
+// Bootstraps the service in a fail-fast way: connect to MongoDB first, then start the
+// HTTP server only after the dependency is ready.
 async function bootstrap(): Promise<void> {
   await connectDatabase();
 
@@ -23,6 +25,8 @@ async function bootstrap(): Promise<void> {
     isShuttingDown = true;
     console.log(`${signal} received. Starting graceful shutdown...`);
 
+    // Guard against a stuck process: if the server refuses to close in time, exit the
+    // process to avoid hanging the container or CI pipeline.
     const forceExitTimeout = setTimeout(() => {
       console.error('Forced shutdown after timeout.');
       process.exit(1);

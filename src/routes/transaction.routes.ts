@@ -6,6 +6,8 @@ import {
   createTransactionSchema
 } from '../validators/transaction.validator.js';
 
+// This nested router shares the parent accountId param so the transaction endpoint can
+// validate both the account path and the request body in one place.
 export const transactionRouter = Router({ mergeParams: true });
 
 transactionRouter.post(

@@ -1,5 +1,7 @@
 import rateLimit from 'express-rate-limit';
 
+// Global quota protects the API from abuse while still allowing normal usage in a
+// single-node deployment.
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,

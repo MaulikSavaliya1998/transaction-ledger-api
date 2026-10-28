@@ -1,5 +1,7 @@
 import 'dotenv/config';
 
+// Centralizes environment configuration so all runtime settings are validated once at
+// startup and fail fast if required values are missing.
 function getRequiredEnv(name: string): string {
   const value = process.env[name];
 
@@ -10,6 +12,7 @@ function getRequiredEnv(name: string): string {
   return value;
 }
 
+// Port must stay within standard TCP range to avoid invalid server bindings.
 function getPort(): number {
   const value = Number(process.env.PORT ?? 3000);
 
@@ -23,6 +26,7 @@ function getPort(): number {
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: getPort(),
+  // MongoDB URI is mandatory because the API cannot operate without a backing store.
   mongoUri: getRequiredEnv('MONGODB_URI'),
   logLevel: process.env.LOG_LEVEL ?? 'info',
   corsOrigin: process.env.CORS_ORIGIN ?? '*'

@@ -1,7 +1,11 @@
 import mongoose from 'mongoose';
 import { env } from './env.js';
 
+// Database bootstrapping is isolated here so the app startup path stays simple and
+// the connection lifecycle can be reused in tests and graceful shutdown flows.
 export async function connectDatabase(): Promise<void> {
+  // Auto-index creation is convenient in local/dev environments but should stay off in
+  // production to avoid unexpected index drift during deploys.
   mongoose.set('autoIndex', env.nodeEnv !== 'production');
 
   await mongoose.connect(env.mongoUri, {

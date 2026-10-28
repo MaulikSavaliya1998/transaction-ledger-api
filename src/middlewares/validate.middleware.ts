@@ -14,6 +14,8 @@ interface ValidationSchemas {
   params?: ZodTypeAny;
 }
 
+// Shared validation middleware runs Zod schemas and converts failures into a uniform
+// 400 response before business logic is reached.
 export function validate(schemas: ValidationSchemas): RequestHandler {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {

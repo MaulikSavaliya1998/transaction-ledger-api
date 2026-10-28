@@ -4,6 +4,8 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 
 config();
 
+// Each test run connects to the dedicated test database, then clears all collections to
+// keep each spec independent and deterministic.
 const testMongoUri =
   process.env.TEST_MONGODB_URI ??
   'mongodb://localhost:27017/transaction_ledger_test?replicaSet=rs0';
